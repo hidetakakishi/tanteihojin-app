@@ -3,7 +3,7 @@
 @section('title', '記事一覧')
 
 @section('content')
-<h1 class="mb-4">記事一覧</h1>
+<h1 class="mb-4">📰 記事一覧</h1>
 
 
 <div class="d-flex justify-content-between align-items-center mb-3">
