@@ -32,12 +32,22 @@
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a href="{{ route('emails.index') }}" class="nav-link {{ request()->routeIs('scraping.index') ? 'active' : '' }}">
-                    メール一覧
+                    メール反響一覧
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('calls.index') }}" class="nav-link {{ request()->routeIs('scraping.index') ? 'active' : '' }}">
+                    電話反響一覧
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('scraping.index') }}" class="nav-link {{ request()->routeIs('scraping.sources') ? 'active' : '' }}">
                     記事一覧
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('import.guide') }}" class="nav-link {{ request()->routeIs('scraping.sources') ? 'active' : '' }}">
+                    取り込み手順
                 </a>
             </li>
         </ul>

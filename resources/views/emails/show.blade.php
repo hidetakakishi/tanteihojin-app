@@ -3,6 +3,16 @@
 @section('title', 'メール詳細')
 
 @section('content')
+    @if ($showWarning)
+    <div class="alert alert-danger">
+        ⚠️ メール本文に複数の
+        @if ($phoneCount > 1) 電話番号（{{ $phoneCount }}件）@endif
+        @if ($emailCount > 1){{ $phoneCount > 1 ? 'および' : '' }}メールアドレス（{{ $emailCount }}件）@endif
+        が含まれています⚠️
+        <br>
+        調査対象に連絡しないように注意してください！！
+    </div>
+    @endif
     <h2>📨 メール詳細</h2>
     <div class="d-flex justify-content-between mb-3">
         @if($previous)
@@ -22,7 +32,29 @@
             <p><strong>差出人：</strong> {{ $email->from }}</p>
             <p><strong>宛先：</strong> {{ $email->to }}</p>
             <hr>
-            <div style="white-space: pre-wrap;">{!! nl2br(e($email->body)) !!}</div>
+            @php
+                $highlightedBody = e($email->body); // XSS対策のためエスケープ
+
+                if ($phoneCount > 1 || $emailCount > 1) {
+                    // 電話番号のハイライト（ハイフンあり・なし対応）
+                    $highlightedBody = preg_replace(
+                        '/\b0\d{1,4}[-]?\d{1,4}[-]?\d{3,4}\b/u',
+                        '<mark>$0</mark>',
+                        $highlightedBody
+                    );
+
+                    // メールアドレスのハイライト
+                    $highlightedBody = preg_replace(
+                        '/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/',
+                        '<mark>$0</mark>',
+                        $highlightedBody
+                    );
+                }
+
+                // 改行を <br> に変換
+                $highlightedBody = nl2br($highlightedBody);
+            @endphp
+            <div style="white-space: pre-wrap;">{!! $highlightedBody !!}</div>
             <hr>
             <form method="POST" action="{{ route('emails.destroy', $email->id) }}" onsubmit="return confirm('本当にこのメールを削除しますか？');">
                 @csrf

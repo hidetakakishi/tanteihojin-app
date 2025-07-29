@@ -3,9 +3,13 @@
 @section('title', '受信メール一覧')
 
 @section('content')
-    <h2>📩 メール一覧</h2>
+    <h2>📩 メール反響一覧</h2>
     @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
+    @endif
+
+    @if (session('error'))
+        <div class="alert alert-danger">{{ session('error') }}</div>
     @endif
 
     <form action="{{ route('emails.import') }}" method="POST" class="mb-3">
@@ -59,7 +63,7 @@
         <thead>
             <tr>
                 <th>送信日時</th>
-                <th>件名</th>
+                <th>本文</th>
                 <th>サイト名</th>
                 <th>対応日</th>
                 <th>担当者</th>
@@ -75,7 +79,7 @@
                     <td>{{ $email->sent_at }}</td>
                     <td>
                         <span data-bs-toggle="tooltip" data-bs-placement="top" title="{{ Str::limit($email->body, 1500) }}">
-                            {{ $email->subject }}
+                            <<マウスホバー表示>>
                         </span>
                     </td>
                     <td>{{ $email->site }}</td>

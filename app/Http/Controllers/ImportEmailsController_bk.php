@@ -1,0 +1,167 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\Email;
+use Carbon\Carbon;
+
+// 受信メールファイル用
+class ImportEmailsController extends Controller
+{
+    public function import(Request $request)
+    {
+        $folder = storage_path('app/emails');
+        $files = glob($folder . '/*.txt');
+        $imported = 0;
+
+        foreach ($files as $filePath) {
+            $content = file_get_contents($filePath);
+            $cleanBody = $this->extractBodyContent($content);
+            $sentAt = $this->extractSentAtFromHeader($content);
+
+            preg_match('/件名:\s*(.*)/u', $content, $subjectMatch);
+            preg_match('/差出人:\s*(.*)/u', $content, $fromMatch);
+            preg_match('/送信日時:\s*(.*)/u', $content, $sentMatch);
+            preg_match('/宛先:\s*(.*)/u', $content, $toMatch);
+
+            $subject = $subjectMatch[1] ?? '（件名なし）';
+            $from = $fromMatch[1] ?? '（差出人不明）';
+            $to = $toMatch[1] ?? '';
+
+            $site = $this->extractSiteName($to,$cleanBody);
+
+            if (!$sentAt) {
+                $sentAt = now(); // フォールバック（任意）
+            }
+
+            $exists = Email::where('from', $from)
+               ->where('to', $to)
+               ->where('sent_at', $sentAt)
+               ->exists();
+
+            if (!$exists) {
+                Email::create([
+                    'from' => $from,
+                    'to' => $to,
+                    'subject' => $subject,
+                    'body' => $cleanBody,
+                    'sent_at' => $sentAt,
+                    'site' => $site,
+                ]);
+            }
+
+            //unlink($filePath); // ファイルを削除
+            $imported++;
+        }
+
+        return redirect()->route('emails.index')->with('success', "{$imported} 件のメールを取り込みました");
+    }
+
+    function extractBodyContent(string $rawBody): string
+    {
+        // 文字化け「�」を削除
+        $rawBody = str_replace("�", '', $rawBody);
+        
+        // 改行統一＆配列化
+        $lines = preg_split("/\r\n|\r|\n/", $rawBody);
+
+        $startIndex = null;
+        $endIndex = null;
+
+        foreach ($lines as $index => $line) {
+            if ($startIndex === null && Str::contains($line, '送信内容')) {
+                $startIndex = $index + 1;
+            }
+
+            $endIndex = $index - 1;
+            if ($startIndex !== null && Str::contains($line, '送信日時')) {
+                $endIndex = $index - 1;
+                break;
+            }
+        }
+
+        if (!is_null($startIndex) && !is_null($endIndex) && $startIndex <= $endIndex) {
+            $bodyLines = array_slice($lines, $startIndex, $endIndex - $startIndex + 1);
+            return implode("\n", array_map('trim', $bodyLines));
+        }
+
+        return '';
+    }
+
+    function extractSentAtFromFooter(string $rawBody): ?Carbon
+    {
+        // マルチバイト対応で改行を統一し、1行ずつ処理
+        $lines = preg_split("/\r\n|\r|\n/", $rawBody);
+
+        foreach ($lines as $line) {
+            if (preg_match('/送信日時\s*:\s*(\d{4}\/\d{2}\/\d{2})\(.+\)\s+(\d{2}:\d{2}:\d{2})/', $line, $matches)) {
+                try {
+                    return Carbon::createFromFormat('Y/m/d H:i:s', "{$matches[1]} {$matches[2]}");
+                } catch (\Exception $e) {
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+    function extractSentAtFromHeader(string $rawBody): ?Carbon
+    {
+        $lines = preg_split("/\r\n|\r|\n/", $rawBody);
+
+        foreach ($lines as $line) {
+            // ヘッダー形式（例: 2025/06/25 7:34 または 07:34）
+            if (preg_match('/送信日時[:：]?\s*(\d{4})\/(\d{1,2})\/(\d{1,2})\s+(\d{1,2}):(\d{1,2})/', $line, $m)) {
+                try {
+                    return Carbon::createFromFormat('Y/n/j G:i', "{$m[1]}/{$m[2]}/{$m[3]} {$m[4]}:{$m[5]}");
+                } catch (\Exception $e) {
+                    continue; // 該当形式ではない場合スキップ
+                }
+            }
+
+            // フッター形式（例: 2025/06/25(Wed) 11:47:36）
+            if (preg_match('/送信日時\s*[:：]\s*(\d{4})\/(\d{1,2})\/(\d{1,2})\([^)]+\)\s+(\d{1,2}):(\d{1,2}):(\d{1,2})/', $line, $m)) {
+                try {
+                    return Carbon::createFromFormat('Y/n/j G:i:s', "{$m[1]}/{$m[2]}/{$m[3]} {$m[4]}:{$m[5]}:{$m[6]}");
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function extractSiteName(string $to, string $body): string
+    {
+        // 宛先から判定
+        if (trim($to) === 'soudan1@tanteik.jp') {
+            return '探偵興信所一般社団法人';
+        }
+
+        if (trim($to) === 'form@privateriskconsulting.jp') {
+            return 'PRC';
+        }
+
+        if (preg_match('/サイト\s*=\s*(.+)/u', $body, $matches)) {
+            $site = trim($matches[1]);
+            // return $site !== '' ? $site : '未分類';
+            if($site === '探偵事務所' || $site === '調査士会')
+            {
+                $site = '探偵法人調査士会';
+            }
+            return $site !== '' ? $site : '探偵法人調査士会';
+        }
+
+        if (trim($to) === 'soudan1@tanteihojin.jp') {
+            return '探偵法人調査士会';
+        }
+
+        return '未分類';
+    }
+}

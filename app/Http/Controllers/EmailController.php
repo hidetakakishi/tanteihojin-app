@@ -20,9 +20,18 @@ class EmailController extends Controller
         // 検索キーワード
         $keyword = $request->input('keyword');
         if ($keyword) {
-            $query->where(function ($q) use ($keyword) {
-                $q->where('subject', 'like', "%{$keyword}%")
-                ->orWhere('body', 'like', "%{$keyword}%");
+            $words = preg_split('/\s+/', mb_convert_kana($keyword, 's'), -1, PREG_SPLIT_NO_EMPTY);
+
+            $query->where(function ($q) use ($words) {
+                foreach ($words as $word) {
+                    $q->where(function ($subQ) use ($word) {
+                        $subQ->where('subject', 'like', "%{$word}%")
+                            ->orWhere('body', 'like', "%{$word}%")
+                            ->orWhereHas('latestResponse', function ($hasQ) use ($word) {
+                                $hasQ->where('staff_name', 'like', "%{$word}%");
+                            });
+                    });
+                }
             });
         }
 
@@ -75,7 +84,27 @@ class EmailController extends Controller
             ->orderBy('sent_at', 'asc')
             ->first();
 
-        return view('emails.show', compact('email', 'previous', 'next'));
+        // 本文から電話番号・メールアドレスを抽出
+        $body = $email->body;
+
+        // 電話番号（ハイフンあり・なし対応）
+        preg_match_all('/\b0\d{1,4}[-]?\d{1,4}[-]?\d{3,4}\b/u', $body, $phoneMatches);
+        $phoneNumbers = array_unique($phoneMatches[0]);
+        $phoneCount = count($phoneNumbers);
+
+        // メールアドレス
+        preg_match_all('/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/', $body, $emailMatches);
+        $emailAddresses = array_unique($emailMatches[0]);
+        $emailCount = count($emailAddresses);
+
+        // 警告表示フラグ
+        $showWarning = ($phoneCount > 1 || $emailCount > 1);
+
+        return view('emails.show', compact(
+            'email', 'previous', 'next',
+            'showWarning', 'phoneCount', 'emailCount',
+            'phoneNumbers', 'emailAddresses'
+        ));
     }
 
     public function destroy(Email $email)

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'lineworks' => [
+        'client_id' => env('LINEWORKS_CLIENT_ID'),
+        'client_secret' => env('LINEWORKS_CLIENT_SECRET'),
+    ],
+
 ];
