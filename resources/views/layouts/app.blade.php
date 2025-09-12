@@ -41,6 +41,11 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="{{ route('jobapps.index') }}" class="nav-link {{ request()->routeIs('scraping.index') ? 'active' : '' }}">
+                    求人反響一覧
+                </a>
+            </li>
+            <li class="nav-item">
                 <a href="{{ route('scraping.index') }}" class="nav-link {{ request()->routeIs('scraping.sources') ? 'active' : '' }}">
                     記事一覧
                 </a>

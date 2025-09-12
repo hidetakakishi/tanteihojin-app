@@ -6,6 +6,8 @@ use App\Http\Controllers\EmailController;
 use App\Http\Controllers\EmailResponseController;
 use App\Http\Controllers\ImportEmailsController;
 use App\Http\Controllers\PhoneCallController;
+use App\Http\Controllers\JobApplicationController;
+use App\Http\Controllers\ImportJobApplicationsController;
 use App\Http\Controllers\LineWorksBotController;
 
 Route::get('/', function () {
@@ -41,5 +43,23 @@ Route::put('/calls/response/{id}', [PhoneCallController::class, 'updateResponse'
 Route::delete('/calls/response/{id}', [PhoneCallController::class, 'destroyResponse'])->name('calls.response.destroy');
 Route::post('/calls/{call}/responses', [PhoneCallController::class, 'storeResponse'])->name('calls.response.store');
 
+
+//　求人反響
+Route::get('/jobapps', [JobApplicationController::class, 'index'])->name('jobapps.index');
+Route::post('/jobapps/import', [ImportJobApplicationsController::class, 'import'])->name('jobapps.import');
+Route::get('/jobapps/{id}', [JobApplicationController::class, 'show'])->name('jobapps.show');
+Route::post('/jobapps/{id}/responses', [JobApplicationController::class, 'storeResponse'])->name('jobapps.response.store');
+Route::put('/jobapps/responses/{responseId}', [JobApplicationController::class, 'updateResponse'])->name('jobapps.response.update');
+Route::delete('/jobapps/responses/{responseId}', [JobApplicationController::class, 'destroyResponse'])->name('jobapps.response.destroy');
+Route::delete('/jobapps/{jobapp}', [JobApplicationController::class, 'destroy'])->name('jobapps.destroy');
+
 // LINE WORKS API
 Route::post('/api/line-works/callback', [LineWorksBotController::class, 'handleWebhook']);
+
+/**
+ * 未定義URLはすべて /emails へ
+ * ※ 必ず最後に置くこと
+ */
+Route::fallback(function () {
+    return redirect()->route('emails.index');
+});
