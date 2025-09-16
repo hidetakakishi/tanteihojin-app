@@ -34,9 +34,9 @@ class ImportJobApplicationsController extends Controller
                     $cleanBody = $this->extractBodyContent($block);
                     $sentAt    = $this->extractSentAtFromFooter($block) ?? $this->extractSentAtFromAlternativeFormat($block);
 
-                    if (!$isAll && (!$sentAt || $sentAt->lt(Carbon::create(2025, 7, 10, 18, 28, 0)))) {
-                        continue; // 既存と同じスキップ条件
-                    }
+                    // if (!$isAll && (!$sentAt || $sentAt->lt(Carbon::create(2025, 7, 10, 18, 28, 0)))) {
+                    //     continue; // 既存と同じスキップ条件
+                    // }
 
                     // --- 項目抽出（代表的なキーを網羅的に吸収） ---
                     $kv = $this->parseKeyValues($cleanBody);

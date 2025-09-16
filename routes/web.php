@@ -10,9 +10,9 @@ use App\Http\Controllers\JobApplicationController;
 use App\Http\Controllers\ImportJobApplicationsController;
 use App\Http\Controllers\LineWorksBotController;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Route::get('/', function () {
+//     return view('welcome');
+// });
 
 Route::get('/import-guide', function () {
     return view('import_guide');

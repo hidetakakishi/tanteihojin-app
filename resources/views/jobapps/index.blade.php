@@ -10,7 +10,7 @@
 
 <form action="{{ route('jobapps.import') }}" method="POST" class="mb-3">
   @csrf
-  <button type="submit" class="btn btn-primary">求人データ取り込み</button>
+  <button type="submit" class="btn btn-primary">求人取り込み</button>
   {{-- <button type="submit" name="all" value="1" class="btn btn-outline-secondary ms-2">すべて取り込み</button> --}}
 </form>
 

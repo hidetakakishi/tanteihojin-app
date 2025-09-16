@@ -32,13 +32,20 @@
             <li>形式：ダウンロードしたファイルそのままでおｋ</li>
             <li>備考：前に取り込んだファイルがある場合は<code>backup</code>フォルダへ移動</li>
         </ul>
+
+        <h5>👔 求人反響ファイル</h5>
+        <ul>
+            <li>設置場所：<code>C:\Users\i7-7700k\tanteihojin-app\storage\app\jobapps</code></li>
+            <li>形式：ダウンロードしたファイルそのままでおｋ</li>
+            <li>備考：前に取り込んだファイルがある場合は<code>backup</code>フォルダへ移動</li>
+        </ul>
     </div>
 
     <div class="mb-4">
         <h4>🧩 2. 取り込み手順</h4>
         <ol>
             <li>メニューから「📧 メール反響一覧」または「📞 電話反響一覧」を開く</li>
-            <li>画面上部の「メール取り込み」または「電話取り込み」をクリック</li>
+            <li>画面上部の「メール取り込み」または「電話取り込み」または「求人取り込み」をクリック</li>
             <li>新しいデータが一覧に反映されます</li>
         </ol>
     </div>
@@ -58,4 +65,5 @@
 
     <a href="{{ route('calls.index') }}" class="btn btn-secondary">📞 電話一覧へ戻る</a>
     <a href="{{ route('emails.index') }}" class="btn btn-secondary">📧 メール一覧へ戻る</a>
+    <a href="{{ route('jobapps.index') }}" class="btn btn-secondary">👔 求人反響一覧へ戻る</a>
 @endsection
